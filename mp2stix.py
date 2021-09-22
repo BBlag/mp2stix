@@ -94,8 +94,8 @@ def build_intrusion_sets(malware, misp, bundle):
 def compile_intrusion_set(misp, actor):
     misp_objs = [obj for obj in misp["values"] if obj["value"].lower() == actor.lower()]
     aliases = [obj["meta"]["synonyms"] for obj in misp_objs if "meta" in obj and "synonyms" in obj["meta"]]
-    descriptions = [obj["description"] for obj in misp_objs if "description" in obj]
     aliases = aliases[0] if aliases else []
+    descriptions = [obj["description"] for obj in misp_objs if "description" in obj]
     description = "This Intrusion-Set object was created based on information from " + URL_MALPEDIA + " and " + URL_MISP + "."
     if descriptions: description += " " + descriptions[0]
     intrusion_set = IntrusionSet(
