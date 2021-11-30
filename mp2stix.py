@@ -3,7 +3,10 @@ import parsedatetime
 import bibtexparser
 from bs4 import BeautifulSoup
 from datetime import datetime, date
+from dateutil import parser
 from stix2 import Report, IntrusionSet, Relationship, Malware, Bundle, Identity
+from stix2.utils import parse_into_datetime
+
 
 URL_FAMILIES = "https://malpedia.caad.fkie.fraunhofer.de/api/get/families"
 URL_BIBTEX = "https://malpedia.caad.fkie.fraunhofer.de/api/get/bib"
@@ -90,6 +93,7 @@ def build_malware(key, obj, bundle):
     )
     if obj["updated"]:
         description += " Last update: " + obj["updated"] + "."
+        parsed_updated = parser.parse(obj["updated"])
     if obj["description"]:
         description = obj["description"] + "\n" + description
     malware = Malware(
@@ -102,6 +106,8 @@ def build_malware(key, obj, bundle):
         is_family=True,
         confidence=95,
         created_by_ref=MALPEDIA_IDENTITY,
+        modified=parse_into_datetime(parsed_updated) if obj["updated"] else None,
+        created=parse_into_datetime(parsed_updated) if obj["updated"] else None,
     )
     return malware
 
@@ -161,6 +167,7 @@ def build_relationships(malware, intrusion_sets, obj):
     description = "Relationship stated on " + URL_MALPEDIA
     if obj["updated"]:
         description += ". Last update: " + obj["updated"] + "."
+        parsed_updated = parser.parse(obj["updated"])
     rels = []
     for intrusion_set in intrusion_sets:
         rels.append(
@@ -173,6 +180,8 @@ def build_relationships(malware, intrusion_sets, obj):
                 description=description,
                 confidence=95,
                 created_by_ref=MALPEDIA_IDENTITY,
+                modified=parse_into_datetime(parsed_updated) if obj["updated"] else None,
+                created=parse_into_datetime(parsed_updated) if obj["updated"] else None,
             )
         )
     return rels
