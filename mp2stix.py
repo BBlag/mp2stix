@@ -3,8 +3,7 @@ import parsedatetime
 import bibtexparser
 from bs4 import BeautifulSoup
 from datetime import datetime, date
-from stix2 import Report, IntrusionSet, Relationship, Malware, Bundle
-
+from stix2 import Report, IntrusionSet, Relationship, Malware, Bundle, Identity
 
 URL_FAMILIES = "https://malpedia.caad.fkie.fraunhofer.de/api/get/families"
 URL_BIBTEX = "https://malpedia.caad.fkie.fraunhofer.de/api/get/bib"
@@ -12,7 +11,7 @@ URL_MISP = (
     "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/threat-actor.json"
 )
 URL_MALPEDIA = "https://malpedia.caad.fkie.fraunhofer.de"
-
+MALPEDIA_IDENTITY = "identity--" + str(uuid.uuid4())
 
 # BUILD STIX BUNDLE #
 
@@ -51,7 +50,13 @@ def disambiguate_aliases(misp):
 
 
 def build_bundle(families, misp, references):
+    malpedia = Identity(
+        id=MALPEDIA_IDENTITY,
+        identity_class="organization",
+        name="Malpedia (Fraunhofer FKIE)",
+    )
     bundle = []
+    bundle.append(malpedia)
     for key in families:
         malware = build_malware(key, families[key], bundle)
         intrusion_sets = build_intrusion_sets(families[key], misp, bundle)
@@ -60,19 +65,6 @@ def build_bundle(families, misp, references):
         bundle = integrate_new_objs(
             [malware] + intrusion_sets + relationships + reports, bundle
         )
-    malp_report = compile_report(
-        URL_MALPEDIA,
-        {
-            URL_MALPEDIA: {
-                "date": str(datetime.now()),
-                "title": "Malpedia",
-                "organization": "Fraunhofer FKIE",
-                "language": "englisch",
-            }
-        },
-        [obj for obj in bundle if obj["type"] != "report"],
-    )
-    bundle.append(malp_report)
     return bundle
 
 
@@ -109,6 +101,7 @@ def build_malware(key, obj, bundle):
         description=description,
         is_family=True,
         confidence=95,
+        created_by_ref=MALPEDIA_IDENTITY,
     )
     return malware
 
@@ -156,6 +149,7 @@ def compile_intrusion_set(misp, actor):
         description=description,
         aliases=aliases,
         confidence=95,
+        created_by_ref=MALPEDIA_IDENTITY,
     )
     return intrusion_set
 
@@ -178,6 +172,7 @@ def build_relationships(malware, intrusion_sets, obj):
                 target_ref=malware["id"],
                 description=description,
                 confidence=95,
+                created_by_ref=MALPEDIA_IDENTITY,
             )
         )
     return rels
@@ -232,7 +227,7 @@ def compile_report(url, references, contained_objs):
         date, title = get_alt_meta(url)
     report = Report(
         type="report",
-        id="report--" + str(uuid.uuid5(uuid.NAMESPACE_DNS, url)),
+        id="report--" + str(uuid.uuid4()),
         name=title.strip(),
         description=description,
         external_references=[{"source_name": title, "url": url}],
@@ -240,6 +235,7 @@ def compile_report(url, references, contained_objs):
         labels=["threat-report"],
         published=date,
         confidence=95,
+        created_by_ref=MALPEDIA_IDENTITY,
     )
     return report
 
