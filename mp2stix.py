@@ -15,6 +15,7 @@ URL_MISP = (
 )
 URL_MALPEDIA = "https://malpedia.caad.fkie.fraunhofer.de"
 MALPEDIA_IDENTITY = "identity--" + str(uuid.uuid4())
+REQUESTS_TIMEOUT = 10
 
 # BUILD STIX BUNDLE #
 
@@ -257,7 +258,7 @@ def parse_date(string):
 
 def get_alt_meta(url):
     try:
-        request = requests.get(url)
+        request = requests.get(url, timeout=REQUESTS_TIMEOUT)
     except:
         request = None
     if request and request.status_code < 400 and not url.endswith(".pdf"):

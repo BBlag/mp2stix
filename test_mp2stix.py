@@ -1,12 +1,12 @@
 import unittest
-from malpedia_stix_export import *
+from mp2stix import *
 from stix2 import Report, IntrusionSet, Relationship, Malware, Bundle
 import uuid
 
 
 class BrokerTest(unittest.TestCase):
-    @staticmethod
-    def test_tmp():
+
+    def test_tmp(self):
         report = Report(
             id="report--" + str(uuid.uuid4()),
             name="test_name",
@@ -21,8 +21,7 @@ class BrokerTest(unittest.TestCase):
         )
         print(report["name"])
 
-    @staticmethod
-    def test_build_reports():
+    def test_build_reports(self):
         tests = [
             {
                 "malware": {"id": "malware--8f20728a-7e18-4f46-b8e0-0e3d0eebb4d7"},
@@ -108,8 +107,7 @@ class BrokerTest(unittest.TestCase):
             for r in result:
                 print(r)
 
-    @staticmethod
-    def test_add_object_ref():
+    def test_add_object_ref(self):
         tests = [
             {
                 "obj_ref_lists": [
@@ -147,8 +145,7 @@ class BrokerTest(unittest.TestCase):
             for r in result:
                 print("\n", r)
 
-    @staticmethod
-    def test_compile_report():
+    def test_compile_report(self):
         tests = [
             {
                 "url": "http://example.com",
@@ -168,8 +165,7 @@ class BrokerTest(unittest.TestCase):
             result = compile_report(test["url"], test["references"], test["malware"])
             print(result)
 
-    @staticmethod
-    def test_disambiguate_report_names():
+    def test_disambiguate_report_names(self):
         tests = [
             {
                 "new_report": {"name": "name1"},
