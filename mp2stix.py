@@ -59,10 +59,9 @@ def build_bundle(families, misp, references):
         identity_class="organization",
         name="Malpedia (Fraunhofer FKIE)",
     )
-    bundle = []
-    bundle.append(malpedia)
+    bundle = [malpedia]
     for key in families:
-        malware = build_malware(key, families[key], bundle)
+        malware = build_malware(key, families[key])
         intrusion_sets = build_intrusion_sets(families[key], misp, bundle)
         relationships = build_relationships(malware, intrusion_sets, families[key])
         reports = build_reports(malware, families[key], bundle, references)
@@ -85,8 +84,8 @@ def integrate_new_objs(new_objs, bundle):
 # BUILD MALWARE #
 
 
-def build_malware(key, obj, bundle):
-    malpedia_link = URL_MALPEDIA + "/details/" + key
+def build_malware(name_key, obj):
+    malpedia_link = URL_MALPEDIA + "/details/" + name_key
     description = (
         "This Malware object was created based on information from "
         + malpedia_link
@@ -101,7 +100,7 @@ def build_malware(key, obj, bundle):
         id="malware--" + str(uuid.uuid4()),
         aliases=obj["alt_names"] + [obj["common_name"]],
         type="malware",
-        name=key,
+        name=name_key,
         labels=["malware"],
         description=description,
         is_family=True,
@@ -164,11 +163,11 @@ def compile_intrusion_set(misp, actor):
 # BUILD RELATIONSHIPS #
 
 
-def build_relationships(malware, intrusion_sets, obj):
+def build_relationships(malware, intrusion_sets, mp_obj):
     description = "Relationship stated on " + URL_MALPEDIA
-    if obj["updated"]:
-        description += ". Last update: " + obj["updated"] + "."
-        parsed_updated = parser.parse(obj["updated"])
+    if mp_obj["updated"]:
+        description += ". Last update: " + mp_obj["updated"] + "."
+        parsed_updated = parser.parse(mp_obj["updated"])
     rels = []
     for intrusion_set in intrusion_sets:
         rels.append(
@@ -181,8 +180,8 @@ def build_relationships(malware, intrusion_sets, obj):
                 description=description,
                 confidence=95,
                 created_by_ref=MALPEDIA_IDENTITY,
-                modified=parse_into_datetime(parsed_updated) if obj["updated"] else None,
-                created=parse_into_datetime(parsed_updated) if obj["updated"] else None,
+                modified=parse_into_datetime(parsed_updated) if mp_obj["updated"] else None,
+                created=parse_into_datetime(parsed_updated) if mp_obj["updated"] else None,
             )
         )
     return rels
@@ -225,7 +224,7 @@ def add_object_ref(report_objs, malware):
 def compile_report(url, references, contained_objs):
     description = ""
     if url in references.keys():
-        date = parse_date(references[url]["date"])
+        date = parse_into_datetime(parser.parse(references[url]["date"])) #parse_date(references[url]["date"])
         title = re.search(r"\{?(.*)(?<!})", references[url]["title"]).group(1)
         if "language" in references[url]:
             description += "Language: " + references[url]["language"] + "\n"
@@ -250,10 +249,14 @@ def compile_report(url, references, contained_objs):
     return report
 
 
-def parse_date(string):
-    time_struct, parse_status = parsedatetime.Calendar().parse(string)
-    time = datetime(*time_struct[:6])
-    return time
+# def parse_date(string):
+#     time_struct, parse_status = parsedatetime.Calendar().parse(string)
+#     time = datetime(*time_struct[:6])
+#     return time
+
+#
+# def parse_date(string):
+#     return parse_into_datetime(parser.parse(string))
 
 
 def get_alt_meta(url):
@@ -282,9 +285,10 @@ def get_alt_meta(url):
 
 def get_date_from_html(html):
     html_elements = find_date_elements(html)
-    len(html_elements)
     for html_element in html_elements:
-        time = parse_date(html_element.text)
+        time_struct, parse_status = parsedatetime.Calendar().parse(html_element.text)
+        time = datetime(*time_struct[:6])
+        # time = parse_date(html_element.text)
         if time.date() < date.today():
             return time.strftime("%Y-%m-%dT%H:%M:%SZ")
     return "1970-01-01T00:00:00Z"
