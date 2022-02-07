@@ -180,8 +180,12 @@ def build_relationships(malware, intrusion_sets, mp_obj):
                 description=description,
                 confidence=95,
                 created_by_ref=MALPEDIA_IDENTITY,
-                modified=parse_into_datetime(parsed_updated) if mp_obj["updated"] else None,
-                created=parse_into_datetime(parsed_updated) if mp_obj["updated"] else None,
+                modified=parse_into_datetime(parsed_updated)
+                if mp_obj["updated"]
+                else None,
+                created=parse_into_datetime(parsed_updated)
+                if mp_obj["updated"]
+                else None,
             )
         )
     return rels
@@ -224,7 +228,9 @@ def add_object_ref(report_objs, malware):
 def compile_report(url, references, contained_objs):
     description = ""
     if url in references.keys():
-        date = parse_into_datetime(parser.parse(references[url]["date"])) #parse_date(references[url]["date"])
+        date = parse_into_datetime(
+            parser.parse(references[url]["date"])
+        )  # parse_date(references[url]["date"])
         title = re.search(r"\{?(.*)(?<!})", references[url]["title"]).group(1)
         if "language" in references[url]:
             description += "Language: " + references[url]["language"] + "\n"
