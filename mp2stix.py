@@ -7,12 +7,9 @@ from dateutil import parser
 from stix2 import Report, IntrusionSet, Relationship, Malware, Bundle, Identity
 from stix2.utils import parse_into_datetime
 
-
 URL_FAMILIES = "https://malpedia.caad.fkie.fraunhofer.de/api/get/families"
 URL_BIBTEX = "https://malpedia.caad.fkie.fraunhofer.de/api/get/bib"
-URL_MISP = (
-    "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/threat-actor.json"
-)
+URL_MISP = "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/threat-actor.json"
 URL_MALPEDIA = "https://malpedia.caad.fkie.fraunhofer.de"
 MALPEDIA_IDENTITY = "identity--" + str(uuid.uuid4())
 REQUESTS_TIMEOUT = 10
